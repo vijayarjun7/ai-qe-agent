@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { ClaudeClient } from '../utils/ClaudeClient';
 import { ManualTestSuite, ManualTestCase } from './ManualTestGenerator';
-import { PageAnalyzer } from '../core/PageAnalyzer';
+import { PageAnalyzer } from './PageAnalyzer';
 import { saveTestFile, slugify } from '../utils/FileUtils';
 import { logger } from '../utils/Logger';
 

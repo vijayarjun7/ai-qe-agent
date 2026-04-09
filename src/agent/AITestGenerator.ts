@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { ClaudeClient } from '../utils/ClaudeClient';
-import { PageAnalyzer, PageAnalysis } from '../core/PageAnalyzer';
+import { PageAnalyzer, PageAnalysis } from './PageAnalyzer';
 import { saveTestFile, slugify } from '../utils/FileUtils';
 import { logger } from '../utils/Logger';
 
