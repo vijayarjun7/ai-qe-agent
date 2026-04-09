@@ -1,0 +1,82 @@
+{
+  "generatedAt": "2026-04-09T20:17:21.539Z",
+  "sourceManualSuiteId": "SUITE-1775765749606",
+  "api": {
+    "target": "api",
+    "filePath": "tests/generated/all-api.spec.ts",
+    "testCount": 41,
+    "testNames": [
+      "POST /api/auth/register - success 201",
+      "POST /api/auth/register - duplicate email returns 4xx",
+      "POST /api/auth/register - missing required fields returns 4xx",
+      "POST /api/auth/register - invalid email format returns 4xx",
+      "POST /api/auth/login - success 200",
+      "POST /api/auth/login - wrong password returns 4xx",
+      "POST /api/auth/login - non-existent user returns 4xx",
+      "POST /api/auth/login - missing credentials returns 4xx",
+      "should create a task successfully - 201",
+      "should create a task with minimal fields - 201",
+      "TC-007 - should return 401 when creating task without auth token",
+      "TC-007 - should return 401 when creating task with invalid token",
+      "should return 4xx when creating task without title",
+      "should retrieve tasks list - 200",
+      "TC-007 - should return 401 for GET /api/tasks without token",
+      "TC-007 - should return 401 for GET /api/tasks with malformed token",
+      "should retrieve a single task by ID - 200",
+      "should return 404 for non-existent task ID",
+      "TC-007 - should return 401 for GET /api/tasks/:id without token",
+      "should update a task successfully - 200",
+      "should update task dueDate - 200",
+      "should return 404 when updating non-existent task",
+      "TC-007 - should return 401 for PUT /api/tasks/:id without token",
+      "TC-007 - should return 401 for PUT /api/tasks/:id with invalid token",
+      "should mark a task as complete - 200",
+      "should return 404 when completing non-existent task",
+      "TC-007 - should return 401 for PATCH /api/tasks/:id/complete without token",
+      "should delete a task successfully - 204",
+      "should return 404 after deleting the same task again",
+      "should return 404 when deleting non-existent task",
+      "TC-007 - should return 401 for DELETE /api/tasks/:id without token",
+      "TC-007 - should return 401 for DELETE /api/tasks/:id with invalid token",
+      "first user should not access second user task - 403 or 404",
+      "first user should not update second user task - 403 or 404",
+      "first user should not delete second user task - 403 or 404",
+      "POST /api/auth/logout - success 200",
+      "POST /api/auth/logout - without token returns 401",
+      "POST /api/auth/logout - with invalid token returns 401",
+      "TC-007 - ${endpoint.label} without token returns 401",
+      "TC-007 - POST /api/tasks without token returns 401",
+      "TC-007 - All endpoints with expired/malformed token return 401"
+    ],
+    "sourceTestIds": [
+      "TC-007"
+    ]
+  },
+  "ui": {
+    "target": "ui",
+    "filePath": "tests/generated/all-ui.spec.ts",
+    "testCount": 12,
+    "testNames": [
+      "should display login page with all required elements",
+      "should login with valid credentials, receive JWT, and redirect to dashboard",
+      "should display task creation form when Add Task button is clicked",
+      "should create a new task with all fields and see it in the task list",
+      "should open edit form pre-populated with existing task values",
+      "should update task title and priority and persist changes",
+      "should persist updated task after page reload",
+      "should show error message and not store token on invalid password",
+      "should show validation error or reject task creation when title is empty",
+      "should accept a task title of exactly 255 characters",
+      "should reject or truncate a task title of 256 characters",
+      "should accept a task title of exactly 1 character"
+    ],
+    "sourceTestIds": [
+      "TC-001",
+      "TC-002",
+      "TC-003",
+      "TC-004",
+      "TC-005",
+      "TC-006"
+    ]
+  }
+}

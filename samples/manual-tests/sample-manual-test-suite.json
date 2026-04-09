@@ -1,0 +1,529 @@
+{
+  "suiteId": "SUITE-1775765749606",
+  "suiteName": "Full Application Test Suite",
+  "component": "all",
+  "requirementsRef": "demo-app/REQUIREMENTS.md",
+  "generatedAt": "2026-04-09T20:15:49.606Z",
+  "testCases": [
+    {
+      "id": "TC-001",
+      "component": "Login",
+      "title": "Successful login with valid credentials returns JWT and redirects to dashboard",
+      "description": "Verify that a registered user can log in with correct email and password, receives a valid JWT token, and is redirected to the task dashboard.",
+      "type": "functional",
+      "priority": "P0",
+      "preconditions": [
+        "TaskMaster frontend is running on http://localhost:3000",
+        "TaskMaster backend is running on http://localhost:3001",
+        "A registered user account exists with email 'testuser@example.com' and password 'Password1'"
+      ],
+      "steps": [
+        {
+          "stepNumber": 1,
+          "action": "Open a browser and navigate to http://localhost:3000/login",
+          "expectedOutcome": "The Login page is displayed with email and password input fields and a Submit button"
+        },
+        {
+          "stepNumber": 2,
+          "action": "Enter 'testuser@example.com' into the Email field",
+          "expectedOutcome": "The email value appears correctly in the input field"
+        },
+        {
+          "stepNumber": 3,
+          "action": "Enter 'Password1' into the Password field",
+          "expectedOutcome": "The password is masked and accepted"
+        },
+        {
+          "stepNumber": 4,
+          "action": "Click the Login / Submit button",
+          "expectedOutcome": "A POST request is sent to http://localhost:3001/api/auth/login"
+        },
+        {
+          "stepNumber": 5,
+          "action": "Observe the HTTP response and the UI state after the request completes",
+          "expectedOutcome": "The API returns HTTP 200 with a JSON body containing 'token' and 'user' object (id, name, email); the frontend stores the token and redirects the user to the task dashboard route"
+        },
+        {
+          "stepNumber": 6,
+          "action": "Inspect browser local storage or session storage for the JWT token",
+          "expectedOutcome": "A JWT token is present and non-empty in storage"
+        }
+      ],
+      "expectedResult": "User is authenticated, JWT is stored client-side, and the task dashboard is displayed without any error messages.",
+      "acceptanceCriteria": [
+        "API responds with HTTP 200",
+        "Response body contains 'token' (non-empty string) and 'user' with correct id, name, and email",
+        "Frontend redirects to dashboard route after successful login",
+        "No error message is shown on screen"
+      ],
+      "tags": [
+        "login",
+        "authentication",
+        "jwt",
+        "happy-path"
+      ],
+      "status": "draft",
+      "generatedAt": "2026-04-09T20:15:49.605Z"
+    },
+    {
+      "id": "TC-002",
+      "component": "Task CRUD",
+      "title": "Authenticated user can create a new task with all required and optional fields",
+      "description": "Verify that a logged-in user can create a task by providing title, description, priority, and due date, and the task appears in the task list.",
+      "type": "functional",
+      "priority": "P0",
+      "preconditions": [
+        "TaskMaster frontend is running on http://localhost:3000",
+        "TaskMaster backend is running on http://localhost:3001",
+        "User is logged in and on the task dashboard",
+        "A valid JWT token is stored in the browser"
+      ],
+      "steps": [
+        {
+          "stepNumber": 1,
+          "action": "Click the 'Add Task' or 'New Task' button on the dashboard",
+          "expectedOutcome": "A task creation form or modal is displayed with fields: Title, Description, Priority (dropdown), Due Date"
+        },
+        {
+          "stepNumber": 2,
+          "action": "Enter 'Buy groceries' in the Title field",
+          "expectedOutcome": "Title field accepts and displays the text"
+        },
+        {
+          "stepNumber": 3,
+          "action": "Enter 'Milk, eggs, bread' in the Description field",
+          "expectedOutcome": "Description field accepts and displays the text"
+        },
+        {
+          "stepNumber": 4,
+          "action": "Select 'high' from the Priority dropdown",
+          "expectedOutcome": "'high' is selected as priority"
+        },
+        {
+          "stepNumber": 5,
+          "action": "Enter a future date (e.g., '2025-12-31') in the Due Date field",
+          "expectedOutcome": "Due date field accepts the date value"
+        },
+        {
+          "stepNumber": 6,
+          "action": "Click the Save / Create Task button",
+          "expectedOutcome": "A POST request is sent to http://localhost:3001/api/tasks with Authorization header and the task payload"
+        },
+        {
+          "stepNumber": 7,
+          "action": "Observe the API response and the updated task list on the dashboard",
+          "expectedOutcome": "API returns HTTP 201 with the newly created task object including a generated 'id', 'completed: false', and correct field values; the task 'Buy groceries' appears in the task list"
+        }
+      ],
+      "expectedResult": "New task is persisted in the database, returned with a unique ID, and displayed in the task list with correct title, priority, and due date.",
+      "acceptanceCriteria": [
+        "API responds with HTTP 201",
+        "Response body contains the new task with auto-generated id, correct title, description, priority, due_date, and completed = false",
+        "Task appears in the dashboard task list immediately after creation",
+        "No error messages are displayed"
+      ],
+      "tags": [
+        "task",
+        "create",
+        "crud",
+        "happy-path"
+      ],
+      "status": "draft",
+      "generatedAt": "2026-04-09T20:15:49.605Z"
+    },
+    {
+      "id": "TC-003",
+      "component": "Task CRUD",
+      "title": "Authenticated user can update an existing task's title and priority",
+      "description": "Verify that a logged-in user can edit an existing task, change its title and priority, save the changes, and the updated values persist in the UI and database.",
+      "type": "functional",
+      "priority": "P0",
+      "preconditions": [
+        "User is logged in and on the task dashboard",
+        "At least one existing task is visible in the task list (e.g., task with title 'Buy groceries')"
+      ],
+      "steps": [
+        {
+          "stepNumber": 1,
+          "action": "Locate the task 'Buy groceries' in the task list and click its Edit button or title link",
+          "expectedOutcome": "An edit form or modal is displayed pre-populated with the task's current values"
+        },
+        {
+          "stepNumber": 2,
+          "action": "Clear the Title field and enter 'Buy groceries and vegetables'",
+          "expectedOutcome": "Title field displays the new text"
+        },
+        {
+          "stepNumber": 3,
+          "action": "Change the Priority dropdown from 'high' to 'medium'",
+          "expectedOutcome": "'medium' is selected"
+        },
+        {
+          "stepNumber": 4,
+          "action": "Click the Save / Update button",
+          "expectedOutcome": "A PUT request is sent to http://localhost:3001/api/tasks/:id with Authorization header and updated fields"
+        },
+        {
+          "stepNumber": 5,
+          "action": "Observe the API response and the task list",
+          "expectedOutcome": "API returns HTTP 200 with the updated task object; the task list shows the new title 'Buy groceries and vegetables' with priority 'medium'"
+        },
+        {
+          "stepNumber": 6,
+          "action": "Reload the page and locate the same task",
+          "expectedOutcome": "Updated title and priority are still displayed, confirming database persistence"
+        }
+      ],
+      "expectedResult": "Task is updated in the database with the new title and priority, and changes are reflected in the UI after reload.",
+      "acceptanceCriteria": [
+        "API responds with HTTP 200",
+        "Response body contains the task with updated title and priority values",
+        "Updated values persist after a page reload",
+        "The updated_at timestamp is newer than the original created_at timestamp"
+      ],
+      "tags": [
+        "task",
+        "update",
+        "crud",
+        "happy-path"
+      ],
+      "status": "draft",
+      "generatedAt": "2026-04-09T20:15:49.605Z"
+    },
+    {
+      "id": "TC-004",
+      "component": "Login",
+      "title": "Login fails with incorrect password and shows error message",
+      "description": "Verify that attempting to log in with a valid registered email but an incorrect password returns HTTP 401 and displays an appropriate error message to the user.",
+      "type": "negative",
+      "priority": "P0",
+      "preconditions": [
+        "TaskMaster frontend is running on http://localhost:3000",
+        "TaskMaster backend is running on http://localhost:3001",
+        "A registered user account exists with email 'testuser@example.com'"
+      ],
+      "steps": [
+        {
+          "stepNumber": 1,
+          "action": "Navigate to http://localhost:3000/login",
+          "expectedOutcome": "Login page is displayed"
+        },
+        {
+          "stepNumber": 2,
+          "action": "Enter 'testuser@example.com' in the Email field",
+          "expectedOutcome": "Email value is accepted"
+        },
+        {
+          "stepNumber": 3,
+          "action": "Enter 'WrongPassword99' in the Password field",
+          "expectedOutcome": "Password value is masked and accepted"
+        },
+        {
+          "stepNumber": 4,
+          "action": "Click the Login / Submit button",
+          "expectedOutcome": "A POST request is sent to http://localhost:3001/api/auth/login"
+        },
+        {
+          "stepNumber": 5,
+          "action": "Observe the API response and the UI",
+          "expectedOutcome": "API returns HTTP 401 with JSON body { error: 'Invalid email or password' }; the frontend displays an error message on screen (e.g., 'Invalid email or password')"
+        },
+        {
+          "stepNumber": 6,
+          "action": "Check that no JWT token has been stored in browser storage",
+          "expectedOutcome": "No token exists in localStorage or sessionStorage; user remains on the login page"
+        }
+      ],
+      "expectedResult": "Login is rejected, no token is issued, user stays on the login page, and a clear error message is displayed.",
+      "acceptanceCriteria": [
+        "API responds with HTTP 401",
+        "Response body contains { error: 'Invalid email or password' }",
+        "No JWT token is stored in browser storage",
+        "An error message is visible on the login page",
+        "User is not redirected to the dashboard"
+      ],
+      "tags": [
+        "login",
+        "authentication",
+        "negative",
+        "security"
+      ],
+      "status": "draft",
+      "generatedAt": "2026-04-09T20:15:49.605Z"
+    },
+    {
+      "id": "TC-005",
+      "component": "Task CRUD",
+      "title": "Creating a task without a title is rejected and shows a validation error",
+      "description": "Verify that submitting a new task form with the Title field empty is rejected by both the frontend and the API, and the user sees an appropriate validation error.",
+      "type": "negative",
+      "priority": "P1",
+      "preconditions": [
+        "User is logged in and on the task dashboard",
+        "The task creation form is accessible"
+      ],
+      "steps": [
+        {
+          "stepNumber": 1,
+          "action": "Click the 'Add Task' or 'New Task' button on the dashboard",
+          "expectedOutcome": "Task creation form is displayed"
+        },
+        {
+          "stepNumber": 2,
+          "action": "Leave the Title field completely empty",
+          "expectedOutcome": "Title field remains blank"
+        },
+        {
+          "stepNumber": 3,
+          "action": "Enter 'low' as Priority and a valid due date",
+          "expectedOutcome": "Other fields are filled"
+        },
+        {
+          "stepNumber": 4,
+          "action": "Click the Save / Create Task button",
+          "expectedOutcome": "Either client-side validation prevents submission and shows an inline error, OR a POST request is sent to http://localhost:3001/api/tasks"
+        },
+        {
+          "stepNumber": 5,
+          "action": "If a request was sent, observe the API response",
+          "expectedOutcome": "API returns HTTP 400 with a JSON error body indicating that title is required (e.g., { error: 'Title is required' })"
+        },
+        {
+          "stepNumber": 6,
+          "action": "Check the task list on the dashboard",
+          "expectedOutcome": "No new task has been added to the list"
+        }
+      ],
+      "expectedResult": "Task creation is blocked, no task record is created in the database, and a validation error message is shown to the user.",
+      "acceptanceCriteria": [
+        "Task is not created (HTTP 400 from API, or client-side validation prevents submission)",
+        "A descriptive error message is displayed to the user",
+        "Task list count does not increase",
+        "Form remains open for the user to correct the input"
+      ],
+      "tags": [
+        "task",
+        "create",
+        "validation",
+        "negative"
+      ],
+      "status": "draft",
+      "generatedAt": "2026-04-09T20:15:49.605Z"
+    },
+    {
+      "id": "TC-006",
+      "component": "Task CRUD",
+      "title": "Task title at maximum boundary length (255 characters) is accepted; 256 characters is rejected or truncated",
+      "description": "Verify boundary behavior for the task title field. A title of 255 characters should be accepted, while behavior for 256 characters should be defined and consistent (rejected with error or truncated).",
+      "type": "edge-case",
+      "priority": "P2",
+      "preconditions": [
+        "User is logged in and on the task dashboard",
+        "Task creation form is accessible"
+      ],
+      "steps": [
+        {
+          "stepNumber": 1,
+          "action": "Open the task creation form",
+          "expectedOutcome": "Form is displayed with a Title field"
+        },
+        {
+          "stepNumber": 2,
+          "action": "Generate a string of exactly 255 characters (e.g., repeat 'A' 255 times) and paste it into the Title field",
+          "expectedOutcome": "The Title field accepts the 255-character string"
+        },
+        {
+          "stepNumber": 3,
+          "action": "Select any valid Priority and click Save",
+          "expectedOutcome": "POST request is sent to /api/tasks with the 255-character title"
+        },
+        {
+          "stepNumber": 4,
+          "action": "Observe the API response",
+          "expectedOutcome": "API returns HTTP 201; task is created with the full 255-character title"
+        },
+        {
+          "stepNumber": 5,
+          "action": "Open the task creation form again and enter a title of exactly 256 characters",
+          "expectedOutcome": "Input field either truncates to 255 characters or accepts 256 characters for submission"
+        },
+        {
+          "stepNumber": 6,
+          "action": "Click Save and observe the response",
+          "expectedOutcome": "If the application enforces a 255-character limit: HTTP 400 is returned with a validation error, or client prevents submission. If no limit is enforced, document actual behavior."
+        },
+        {
+          "stepNumber": 7,
+          "action": "Check that a 1-character title (single letter) is also accepted",
+          "expectedOutcome": "API returns HTTP 201 for a single-character title; task appears in task list"
+        }
+      ],
+      "expectedResult": "A 255-character title is accepted and stored. Behavior for a 256-character title is consistent with application constraints (rejected or truncated). A 1-character title is always accepted.",
+      "acceptanceCriteria": [
+        "Task with 255-character title is created successfully (HTTP 201)",
+        "Task with 1-character title is created successfully (HTTP 201)",
+        "Behavior for titles exceeding any documented maximum is consistent and predictable",
+        "If validation fails, HTTP 400 is returned with a descriptive error"
+      ],
+      "tags": [
+        "task",
+        "boundary",
+        "edge-case",
+        "validation",
+        "title"
+      ],
+      "status": "draft",
+      "generatedAt": "2026-04-09T20:15:49.605Z"
+    },
+    {
+      "id": "TC-007",
+      "component": "API",
+      "title": "Accessing task endpoints without a JWT token returns 401 Unauthorized",
+      "description": "Verify that all protected task API endpoints return HTTP 401 when called without an Authorization header, ensuring unauthenticated access is blocked.",
+      "type": "api",
+      "priority": "P0",
+      "preconditions": [
+        "TaskMaster backend is running on http://localhost:3001",
+        "An API client (e.g., Postman, curl, or a REST client) is available",
+        "At least one task exists in the database for GET/PUT/DELETE tests"
+      ],
+      "steps": [
+        {
+          "stepNumber": 1,
+          "action": "Send a GET request to http://localhost:3001/api/tasks with NO Authorization header",
+          "expectedOutcome": "Response is HTTP 401 with JSON body { error: 'Unauthorized' } or similar unauthorized message"
+        },
+        {
+          "stepNumber": 2,
+          "action": "Send a POST request to http://localhost:3001/api/tasks with a valid task body but NO Authorization header",
+          "expectedOutcome": "Response is HTTP 401; no task is created in the database"
+        },
+        {
+          "stepNumber": 3,
+          "action": "Send a PUT request to http://localhost:3001/api/tasks/1 with valid update body but NO Authorization header",
+          "expectedOutcome": "Response is HTTP 401; task data is not modified"
+        },
+        {
+          "stepNumber": 4,
+          "action": "Send a DELETE request to http://localhost:3001/api/tasks/1 with NO Authorization header",
+          "expectedOutcome": "Response is HTTP 401; task is not deleted"
+        },
+        {
+          "stepNumber": 5,
+          "action": "Send a GET request to http://localhost:3001/api/tasks with an Authorization header containing an expired or malformed token (e.g., 'Bearer invalidtoken123')",
+          "expectedOutcome": "Response is HTTP 401 with an error message indicating the token is invalid or expired"
+        },
+        {
+          "stepNumber": 6,
+          "action": "Verify the database state after all the above requests",
+          "expectedOutcome": "No data was created, modified, or deleted as a result of unauthenticated requests"
+        }
+      ],
+      "expectedResult": "All task API endpoints consistently return HTTP 401 when called without a valid JWT token, and no data mutations occur.",
+      "acceptanceCriteria": [
+        "GET /api/tasks without token returns HTTP 401",
+        "POST /api/tasks without token returns HTTP 401 and creates no task",
+        "PUT /api/tasks/:id without token returns HTTP 401 and modifies no task",
+        "DELETE /api/tasks/:id without token returns HTTP 401 and deletes no task",
+        "An invalid or malformed token also results in HTTP 401",
+        "Response body contains an error field with a meaningful message"
+      ],
+      "tags": [
+        "api",
+        "authentication",
+        "security",
+        "jwt",
+        "401"
+      ],
+      "status": "draft",
+      "generatedAt": "2026-04-09T20:15:49.605Z"
+    },
+    {
+      "id": "TC-008",
+      "component": "Mobile layout",
+      "title": "Task dashboard renders correctly and is fully usable at 480px mobile viewport width",
+      "description": "Verify that the TaskMaster task dashboard layout adapts correctly to a 480px-wide mobile viewport, ensuring all key UI elements are visible, readable, and interactive without horizontal scrolling.",
+      "type": "mobile",
+      "priority": "P1",
+      "preconditions": [
+        "TaskMaster frontend is running on http://localhost:3000",
+        "User is logged in and has at least 3 tasks in the list",
+        "Browser DevTools or a physical/emulated mobile device is available",
+        "Viewport is set to 480px width (e.g., via Chrome DevTools device emulation)"
+      ],
+      "steps": [
+        {
+          "stepNumber": 1,
+          "action": "Open Chrome DevTools (F12), go to Device Toolbar, and set the viewport to 480px wide x 850px tall",
+          "expectedOutcome": "Viewport is set to 480px; the page reloads or re-renders at the new size"
+        },
+        {
+          "stepNumber": 2,
+          "action": "Navigate to http://localhost:3000 and log in if not already authenticated",
+          "expectedOutcome": "Login form is displayed in a single-column layout; fields and button are full-width and easily tappable"
+        },
+        {
+          "stepNumber": 3,
+          "action": "After login, observe the task dashboard layout",
+          "expectedOutcome": "Navigation header or menu is visible; if a hamburger/collapsed menu is used, the icon is visible and functional; task list is displayed in a vertical single-column format"
+        },
+        {
+          "stepNumber": 4,
+          "action": "Scroll through the task list and check for horizontal overflow",
+          "expectedOutcome": "No horizontal scrollbar is present; all task cards/rows fit within the 480px width without content being clipped"
+        },
+        {
+          "stepNumber": 5,
+          "action": "Tap or click the 'Add Task' button",
+          "expectedOutcome": "Task creation form opens and is fully visible and usable within the 480px viewport; all form fields are accessible without horizontal scrolling"
+        },
+        {
+          "stepNumber": 6,
+          "action": "Create a new task by filling in Title and selecting Priority, then tapping Save",
+          "expectedOutcome": "Task is created successfully and appears in the task list; success feedback is visible on screen"
+        },
+        {
+          "stepNumber": 7,
+          "action": "Tap the Edit button on an existing task card",
+          "expectedOutcome": "Edit form is displayed correctly within the mobile viewport; Save and Cancel buttons are accessible"
+        },
+        {
+          "stepNumber": 8,
+          "action": "Tap the Delete button on a task and confirm deletion",
+          "expectedOutcome": "Task is removed from the list; confirmation dialog (if present) is fully visible and interactive at 480px"
+        },
+        {
+          "stepNumber": 9,
+          "action": "Check font sizes, button sizes, and touch target sizes across all visible elements",
+          "expectedOutcome": "Text is legible without zooming; interactive elements (buttons, inputs) have a minimum touch target size of approximately 44x44px; no text overlaps"
+        }
+      ],
+      "expectedResult": "The full task management workflow (view, create, edit, delete) is functional and visually correct at 480px viewport width with no horizontal scrolling and adequate touch target sizes.",
+      "acceptanceCriteria": [
+        "Dashboard layout is single-column at 480px width",
+        "No horizontal scrollbar or content overflow is present",
+        "All CRUD actions (add, edit, delete, complete) are accessible and functional",
+        "Form fields and buttons are full-width and tappable",
+        "Text is legible without user-initiated zoom",
+        "Navigation elements are accessible at mobile width"
+      ],
+      "tags": [
+        "mobile",
+        "responsive",
+        "layout",
+        "480px",
+        "ux"
+      ],
+      "status": "draft",
+      "generatedAt": "2026-04-09T20:15:49.605Z"
+    }
+  ],
+  "coverageSummary": {
+    "functional": 3,
+    "negative": 2,
+    "edgeCases": 1,
+    "ui": 0,
+    "api": 1,
+    "mobile": 1
+  }
+}
