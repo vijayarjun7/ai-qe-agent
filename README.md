@@ -421,7 +421,7 @@ npm run report
 ```
 ai-qe-agent/
 ├── src/
-│   ├── agent/
+│   ├── agent/                         # All AI agents
 │   │   ├── AIDevAgent.ts              # Generates full-stack demo app (20 files)
 │   │   ├── ManualTestGenerator.ts     # Generates manual TCs from requirements
 │   │   ├── QAReviewAgent.ts           # Peer-reviews manual TCs and automation scripts
@@ -430,13 +430,12 @@ ai-qe-agent/
 │   │   ├── ChangeDetector.ts          # chokidar watcher + change classifier
 │   │   ├── ReviewQueueManager.ts      # Creates/manages review tickets
 │   │   ├── SelfHealingAgent.ts        # Auto-heals broken selectors via DOM analysis
-│   │   ├── AITestGenerator.ts         # URL-based test generation (original)
-│   │   └── ReportGenerator.ts         # AI-powered HTML report generator
-│   ├── orchestrator/
-│   │   └── QEPipeline.ts              # Orchestrates the full 6-step pipeline
-│   ├── core/
+│   │   ├── AITestGenerator.ts         # URL-based test generation
+│   │   ├── ReportGenerator.ts         # AI-powered HTML report generator
 │   │   ├── PageAnalyzer.ts            # Extracts page structure via Playwright
 │   │   └── APITester.ts               # REST API test generator
+│   ├── orchestrator/
+│   │   └── QEPipeline.ts              # Orchestrates the full 6-step pipeline
 │   ├── utils/
 │   │   ├── ClaudeClient.ts            # Anthropic Claude API wrapper
 │   │   ├── Logger.ts                  # Structured logging (Winston)

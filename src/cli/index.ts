@@ -6,7 +6,7 @@ import chalk from 'chalk';
 import { AITestGenerator } from '../agent/AITestGenerator';
 import { SelfHealingAgent } from '../agent/SelfHealingAgent';
 import { ReportGenerator } from '../agent/ReportGenerator';
-import { APITester } from '../core/APITester';
+import { APITester } from '../agent/APITester';
 import { AIDevAgent } from '../agent/AIDevAgent';
 import { ManualTestGenerator } from '../agent/ManualTestGenerator';
 import { QAReviewAgent } from '../agent/QAReviewAgent';
