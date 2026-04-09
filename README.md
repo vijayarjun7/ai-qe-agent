@@ -74,7 +74,7 @@ cp .env.example .env
 ```
 
 ```env
-ANTHROPIC_API_KEY=sk-ant-api03-...
+ANTHROPIC_API_KEY=YOUR_ANTHROPIC_API_KEY
 BASE_URL=http://localhost:3000
 API_BASE_URL=http://localhost:3001
 ```
