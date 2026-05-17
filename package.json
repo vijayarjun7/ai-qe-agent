@@ -32,7 +32,8 @@
     "mobile-test": "ts-node src/cli/index.ts mobile-test",
     "mobile-test:url": "ts-node src/cli/index.ts mobile-test --url http://localhost:3000",
     "mobile-test:all-scenarios": "ts-node src/cli/index.ts mobile-test --url http://localhost:3000 --scenarios layout,navigation,touch,orientation,network,performance,accessibility,pwa,forms,media",
-    "mobile-test:list": "ts-node src/cli/index.ts mobile-test --list-devices"
+    "mobile-test:list": "ts-node src/cli/index.ts mobile-test --list-devices",
+    "eval": "ts-node eval_suite.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
