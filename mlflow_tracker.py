@@ -26,8 +26,12 @@ except ImportError:
     sys.exit("mlflow not installed — run: pip3 install mlflow")
 
 # ── Config ────────────────────────────────────────────────────────────────────
-EXPERIMENT = os.environ.get("MLFLOW_EXPERIMENT", "ai-qe-agent-eval")
-MODEL      = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6")
+EXPERIMENT   = os.environ.get("MLFLOW_EXPERIMENT", "ai-qe-agent-eval")
+MODEL        = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6")
+# Pin the tracking URI so the UI and tracker always read the same file.
+DB_PATH      = Path(__file__).parent / "mlflow.db"
+TRACKING_URI = f"sqlite:///{DB_PATH}"
+mlflow.set_tracking_uri(TRACKING_URI)
 
 AGENT_ORDER = [
     "ManualTestGenerator",
@@ -304,7 +308,7 @@ def main() -> None:
     print()
     print("  ─" * (W // 2))
     print(f"  MLflow UI : http://127.0.0.1:5050")
-    print(f"  Run with  : mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5050")
+    print(f"  Run with  : mlflow ui --backend-store-uri {TRACKING_URI} --port 5050")
     print("═" * W + "\n")
 
 
