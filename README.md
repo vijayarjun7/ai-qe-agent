@@ -527,6 +527,7 @@ ai-qe-agent/
 │   ├── frontend/                      # React + Vite + TypeScript
 │   ├── REQUIREMENTS.md                # App requirements (used by QE agent)
 │   └── setup.sh                       # One-command setup
+├── api_server.py                      # FastAPI server (eval + health + metrics endpoints)
 ├── eval_suite.ts                      # LLM-as-judge eval (4 agents × 4 dimensions)
 ├── trulens_monitor.py                 # TruLens dashboard + alerts + trend reports
 ├── langsmith_tracer.py                # LangSmith tracing (wrap_anthropic + @traceable)
@@ -615,6 +616,31 @@ This agent is designed to work within Claude API token budgets:
   with:
     name: playwright-report
     path: reports/
+```
+
+---
+
+## REST API Server
+
+`api_server.py` exposes the QE eval pipeline as a production-ready FastAPI service.
+
+```bash
+uvicorn api_server:app --reload --port 8000
+# Swagger UI → http://127.0.0.1:8000/docs
+```
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/eval/run` | POST | LLM-as-judge evaluation on any agent output |
+| `/api/health` | GET | Server uptime, model, version |
+| `/api/metrics` | GET | Aggregated quality scores + hallucination counts |
+
+**Example:**
+```bash
+curl -X POST http://localhost:8000/api/eval/run \
+     -H "Content-Type: application/json" \
+     -d '{"agent":"ManualTestGenerator","output":"Generated 8 test cases..."}'
+# → {"quality_score":0.87,"faithfulness":0.0,"hallucination_detected":false,"chain_compatible":false}
 ```
 
 ---
