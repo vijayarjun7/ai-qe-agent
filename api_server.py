@@ -1,21 +1,13 @@
 """
-api_server.py — Production FastAPI server for AI QE Agent + Fintech AI Agent
+api_server.py — Production FastAPI server for AI QE Agent
 
-Exposes fraud detection, compliance Q&A, LLM eval, health, and metrics
-endpoints — all powered by Claude claude-sonnet-4-20250514 via the Anthropic SDK.
+Exposes LLM evaluation, health, and metrics endpoints powered by
+Claude claude-sonnet-4-20250514 via the Anthropic SDK.
 
 Run : uvicorn api_server:app --reload --port 8000
 Docs: http://localhost:8000/docs
 
 curl examples:
-  curl -X POST http://localhost:8000/api/fraud/detect \
-       -H "Content-Type: application/json" \
-       -d '{"transaction":"Transfer $9800 to Cayman Islands at 3am","threshold":7}'
-
-  curl -X POST http://localhost:8000/api/compliance/query \
-       -H "Content-Type: application/json" \
-       -d '{"question":"What are KYC requirements?"}'
-
   curl -X POST http://localhost:8000/api/eval/run \
        -H "Content-Type: application/json" \
        -d '{"agent":"ManualTestGenerator","output":"Generated 8 test cases..."}'
@@ -80,7 +72,7 @@ def _record(quality: Optional[float], halluc: bool, ms: float) -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     log.info("╔══════════════════════════════════════════════════════════════╗")
-    log.info("║   AI QE Agent + Fintech API Server  v%s                ║", VERSION)
+    log.info("║   AI QE Agent API Server  v%-34s ║", VERSION)
     log.info("║   Model  : %-48s ║", MODEL)
     log.info("║   Docs   : http://localhost:8000/docs                       ║")
     log.info("╚══════════════════════════════════════════════════════════════╝")
@@ -90,10 +82,13 @@ async def lifespan(app: FastAPI):
 
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(
-    title="AI QE Agent + Fintech API",
+    title="AI QE Agent API",
     description=(
-        "Fraud detection, compliance Q&A, and LLM evaluation endpoints "
-        "powered by Claude claude-sonnet-4-20250514."
+        "LLM-as-judge evaluation endpoints for the AI QE Agent pipeline — "
+        "powered by Claude claude-sonnet-4-20250514. "
+        "Evaluates ManualTestGenerator, QAReviewAgent, AutomationScriptGenerator, "
+        "and SelfHealingAgent outputs for quality, faithfulness, hallucination, "
+        "and chain compatibility."
     ),
     version=VERSION,
     lifespan=lifespan,
@@ -123,32 +118,6 @@ async def log_requests(request: Request, call_next):
 # ═══════════════════════════════════════════════════════════════════════════════
 # Pydantic models
 # ═══════════════════════════════════════════════════════════════════════════════
-
-class FraudRequest(BaseModel):
-    transaction: str = Field(..., example="Transfer $9,800 to Cayman Islands at 3am")
-    threshold:   int = Field(7, ge=1, le=10, example=7)
-
-
-class FraudResponse(BaseModel):
-    risk_score:         int
-    risk_level:         str          # LOW | MEDIUM | HIGH | CRITICAL
-    red_flags:          list[str]
-    recommendation:     str          # approve | review | reject
-    faithfulness_score: float
-    confidence:         float
-    processing_time_ms: int
-
-
-class ComplianceRequest(BaseModel):
-    question: str = Field(..., example="What are KYC requirements?")
-
-
-class ComplianceResponse(BaseModel):
-    answer:           str
-    source:           str
-    confidence:       float
-    hallucination_risk: str          # LOW | MEDIUM | HIGH
-
 
 class EvalRequest(BaseModel):
     agent:  str = Field(..., example="ManualTestGenerator")
@@ -204,132 +173,8 @@ def _parse_json(raw: str) -> dict:
 # 1. POST /api/fraud/detect
 # ═══════════════════════════════════════════════════════════════════════════════
 
-FRAUD_SYSTEM = """You are a senior fraud detection analyst for a fintech company.
-Analyze transactions for risk. Respond ONLY with valid JSON — no prose, no markdown.
-
-JSON schema:
-{
-  "risk_score": <int 1-10>,
-  "risk_level": <"LOW"|"MEDIUM"|"HIGH"|"CRITICAL">,
-  "red_flags": [<string>, ...],
-  "recommendation": <"approve"|"review"|"reject">,
-  "faithfulness_score": <float 0-1>,
-  "confidence": <float 0-1>
-}
-
-Risk score guide: 1-3=LOW, 4-6=MEDIUM, 7-8=HIGH, 9-10=CRITICAL.
-Recommendation: approve if score<=4, review if 5-6, reject if >=7."""
-
-
-@app.post(
-    "/api/fraud/detect",
-    response_model=FraudResponse,
-    summary="Analyze a transaction for fraud risk",
-    tags=["Fraud"],
-)
-async def fraud_detect(body: FraudRequest) -> FraudResponse:
-    """
-    Analyze a transaction description for fraud signals using Claude.
-
-    **curl example:**
-    ```bash
-    curl -X POST http://localhost:8000/api/fraud/detect \\
-         -H "Content-Type: application/json" \\
-         -d '{"transaction": "Transfer $9800 to Cayman Islands at 3am", "threshold": 7}'
-    ```
-    """
-    t0 = time.time()
-    try:
-        raw  = _claude(
-            system=FRAUD_SYSTEM,
-            user=f"Transaction: {body.transaction}\nRisk threshold: {body.threshold}",
-        )
-        data = _parse_json(raw)
-    except (ValueError, json.JSONDecodeError) as exc:
-        raise HTTPException(status_code=500, detail=f"Model response parse error: {exc}")
-    except anthropic.AuthenticationError:
-        raise HTTPException(status_code=500, detail="Invalid Anthropic API key.")
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
-
-    ms     = round((time.time() - t0) * 1000)
-    halluc = data.get("faithfulness_score", 1.0) < 0.7
-    _record(None, halluc, ms)
-
-    return FraudResponse(
-        risk_score         = int(data.get("risk_score", 5)),
-        risk_level         = data.get("risk_level", "MEDIUM"),
-        red_flags          = data.get("red_flags", []),
-        recommendation     = data.get("recommendation", "review"),
-        faithfulness_score = float(data.get("faithfulness_score", 0.9)),
-        confidence         = float(data.get("confidence", 0.8)),
-        processing_time_ms = ms,
-    )
-
-
 # ═══════════════════════════════════════════════════════════════════════════════
-# 2. POST /api/compliance/query
-# ═══════════════════════════════════════════════════════════════════════════════
-
-COMPLIANCE_SYSTEM = """You are a compliance expert for a regulated fintech company.
-Answer regulatory questions accurately. Respond ONLY with valid JSON — no prose, no markdown.
-
-JSON schema:
-{
-  "answer": <string — clear, specific compliance answer>,
-  "source": <string — regulation/standard name, e.g. "KYC", "AML", "PCI-DSS", "GDPR">,
-  "confidence": <float 0-1>,
-  "hallucination_risk": <"LOW"|"MEDIUM"|"HIGH">
-}
-
-Be precise. Flag uncertainty with HIGH hallucination_risk.
-Only reference established regulations (FATF, FinCEN, Basel III, GDPR, PCI-DSS)."""
-
-
-@app.post(
-    "/api/compliance/query",
-    response_model=ComplianceResponse,
-    summary="Answer a compliance or regulatory question",
-    tags=["Compliance"],
-)
-async def compliance_query(body: ComplianceRequest) -> ComplianceResponse:
-    """
-    Ask a compliance question — Claude answers with source and hallucination risk.
-
-    **curl example:**
-    ```bash
-    curl -X POST http://localhost:8000/api/compliance/query \\
-         -H "Content-Type: application/json" \\
-         -d '{"question": "What are KYC requirements?"}'
-    ```
-    """
-    t0 = time.time()
-    try:
-        raw  = _claude(
-            system=COMPLIANCE_SYSTEM,
-            user=body.question,
-            max_tokens=600,
-        )
-        data = _parse_json(raw)
-    except (ValueError, json.JSONDecodeError) as exc:
-        raise HTTPException(status_code=500, detail=f"Model response parse error: {exc}")
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
-
-    ms     = round((time.time() - t0) * 1000)
-    halluc = data.get("hallucination_risk", "LOW") == "HIGH"
-    _record(None, halluc, ms)
-
-    return ComplianceResponse(
-        answer           = data.get("answer", ""),
-        source           = data.get("source", "General"),
-        confidence       = float(data.get("confidence", 0.8)),
-        hallucination_risk = data.get("hallucination_risk", "LOW"),
-    )
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# 3. POST /api/eval/run
+# 1. POST /api/eval/run
 # ═══════════════════════════════════════════════════════════════════════════════
 
 EVAL_SYSTEM = """You are an LLM evaluation judge assessing AI QE pipeline agent outputs.
@@ -393,7 +238,7 @@ async def eval_run(body: EvalRequest) -> EvalResponse:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 4. GET /api/health
+# 2. GET /api/health
 # ═══════════════════════════════════════════════════════════════════════════════
 
 @app.get(
@@ -420,7 +265,7 @@ async def health() -> HealthResponse:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 5. GET /api/metrics
+# 3. GET /api/metrics
 # ═══════════════════════════════════════════════════════════════════════════════
 
 @app.get(
