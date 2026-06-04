@@ -466,6 +466,13 @@ ai-qe-agent/
 │   ├── frontend/                      # React + Vite + TypeScript
 │   ├── REQUIREMENTS.md                # App requirements (used by QE agent)
 │   └── setup.sh                       # One-command setup
+├── eval_suite.ts                      # LLM-as-judge eval (4 agents × 4 dimensions)
+├── trulens_monitor.py                 # TruLens dashboard + alerts + trend reports
+├── langsmith_tracer.py                # LangSmith tracing (wrap_anthropic + @traceable)
+├── mlflow_tracker.py                  # MLflow experiment tracker (runs + metrics + artifacts)
+├── vector_store.py                    # Pinecone semantic search for duplicate prevention
+├── eval_reports/                      # JSON eval reports (git-ignored)
+├── mlflow.db                          # MLflow SQLite store (git-ignored)
 ├── playwright.config.ts               # Multi-project config (6 projects)
 ├── tsconfig.json
 ├── package.json
@@ -551,6 +558,102 @@ This agent is designed to work within Claude API token budgets:
 
 ---
 
+## Observability Stack
+
+Five layered observability tools are included on top of the core pipeline:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  OBSERVABILITY STACK                         │
+├──────────────┬──────────────┬──────────────┬────────────────┤
+│  eval_suite  │   trulens    │  langsmith   │    mlflow      │
+│     .ts      │  _monitor.py │  _tracer.py  │  _tracker.py   │
+│              │              │              │                │
+│  LLM-as-judge│  Dashboard + │  Trace every │  Experiment    │
+│  scores each │  alerts per  │  Claude call │  runs with     │
+│  agent on 4  │  agent run   │  via         │  params +      │
+│  dimensions  │  (TruLens)   │  wrap_anthro │  metrics +     │
+│              │              │  pic()       │  artifacts     │
+└──────────────┴──────────────┴──────────────┴────────────────┘
+                       +
+              vector_store.py
+              Pinecone semantic search —
+              prevents duplicate test generation
+```
+
+### 1. LLM Eval Suite (`eval_suite.ts`)
+
+Evaluates all 4 agents using Claude as judge across 4 dimensions.
+
+```bash
+npm run eval
+# or
+npx ts-node eval_suite.ts
+```
+
+Saves results to `eval_reports/report_<timestamp>.json` with:
+- **Quality Score** — completeness, specificity, actionability, overall
+- **Hallucination Detection** — flags unsupported claims
+- **Faithfulness** — checks if instructions were followed
+- **Chain Consistency** — validates Agent A → Agent B handoff schema
+
+### 2. TruLens Monitor (`trulens_monitor.py`)
+
+Ingests eval reports into a TruLens dashboard with per-agent trend tracking.
+
+```bash
+python trulens_monitor.py              # launch dashboard at localhost:8501
+python trulens_monitor.py --no-dashboard   # alerts + trends only
+```
+
+Features: alert thresholds (quality < 0.80 → WARNING, hallucination → CRITICAL), Δ trend vs previous run, multi-version Compare tab.
+
+### 3. LangSmith Tracer (`langsmith_tracer.py`)
+
+Wraps every Claude call with `wrap_anthropic()` + `@traceable` so each agent evaluation appears as a nested trace in LangSmith.
+
+```bash
+python langsmith_tracer.py
+# View traces at https://smith.langchain.com → project: ai-qe-agent-eval
+```
+
+Requires: `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT` in `.env`.
+
+### 4. MLflow Tracker (`mlflow_tracker.py`)
+
+Logs all 4 agents as separate MLflow runs with 8 metrics, 4 parameters, and the eval JSON as an artifact. Fully local — no cloud needed.
+
+```bash
+python mlflow_tracker.py
+
+# Launch UI (port 5050 — macOS port 5000 is reserved by AirPlay):
+mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5050
+# Open: http://127.0.0.1:5050 → Model training tab → ai-qe-agent-eval
+```
+
+### 5. Pinecone Vector Store (`vector_store.py`)
+
+Indexes test cases as 384-dim embeddings (sentence-transformers `all-MiniLM-L6-v2`) in Pinecone. Used to find semantically similar existing tests before generating new ones.
+
+```bash
+python vector_store.py
+```
+
+Requires: `PINECONE_API_KEY` in `.env`.
+
+### Observability Environment Variables
+
+| Variable | Description |
+|---|---|
+| `LANGSMITH_API_KEY` | LangSmith API key |
+| `LANGSMITH_PROJECT` | LangSmith project name (default: `ai-qe-agent-eval`) |
+| `LANGSMITH_TRACING` | Enable tracing (`true`) |
+| `PINECONE_API_KEY` | Pinecone API key |
+| `PINECONE_INDEX` | Pinecone index name (default: `ai-qe-agent`) |
+| `MLFLOW_EXPERIMENT` | MLflow experiment name (default: `ai-qe-agent-eval`) |
+
+---
+
 ## Powered By
 
 - [Playwright](https://playwright.dev) — Browser automation
@@ -558,3 +661,8 @@ This agent is designed to work within Claude API token budgets:
 - [chokidar](https://github.com/paulmillr/chokidar) — File watching for change detection
 - [TypeScript](https://www.typescriptlang.org) — Type-safe automation scripts
 - [Winston](https://github.com/winstonjs/winston) — Structured logging
+- [TruLens](https://www.trulens.org) — LLM evaluation dashboard and monitoring
+- [LangSmith](https://smith.langchain.com) — LLM trace capture and debugging
+- [MLflow](https://mlflow.org) — Experiment tracking, metric comparison, artifact storage
+- [Pinecone](https://www.pinecone.io) — Vector store for semantic test case retrieval
+- [sentence-transformers](https://sbert.net) — Local text embeddings (all-MiniLM-L6-v2)

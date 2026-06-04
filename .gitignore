@@ -37,3 +37,11 @@ tests/.DS_Store
 # Logs
 *.log
 logs/
+
+# Observability runtime data — never commit
+eval_reports/
+mlflow.db
+mlruns/
+mlflow_summary.txt
+default.sqlite
+package-lock.json
