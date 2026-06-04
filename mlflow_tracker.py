@@ -303,8 +303,8 @@ def main() -> None:
 
     print()
     print("  ─" * (W // 2))
-    print(f"  MLflow UI : http://localhost:5000")
-    print(f"  Run with  : mlflow ui")
+    print(f"  MLflow UI : http://127.0.0.1:5050")
+    print(f"  Run with  : mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5050")
     print("═" * W + "\n")
 
 
